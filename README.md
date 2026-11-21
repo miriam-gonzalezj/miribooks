@@ -1,0 +1,188 @@
+<p align="center">
+  <img src="docs/img/miribooks-hero-en.png" alt="MiriBooks: inventory manager for physical and electronic books" width="100%">
+</p>
+
+<p align="center">
+  <b>English</b> · <a href="README.es.md">Español</a>
+</p>
+
+<h1 align="center"><i>Miri</i>Books</h1>
+
+<p align="center"><b>Point your phone at a book. In a second, you know if you already own it.</b></p>
+
+---
+
+## The story
+
+I love books, and I buy them everywhere, especially when I travel. Over the years my library spread across
+several houses and a folder full of PDFs and EPUBs. One day I realized I no longer knew what I owned, and I
+had started buying the same book twice.
+
+So I built **MiriBooks**: an app that keeps **all my books, on paper and digital, in one inventory**, and
+that I can check from a bookstore aisle before buying. Registering my nearly 500 paper books turned out to
+be fast and even fun: I choose the bookcase, scan, save, and move on to the next one.
+
+The app is the first step. The final goal is **MiriBooks-Agent**: an AI agent I can ask in natural
+language, the way I'd ask a person, *“What do I have by Unamuno?”*, *“How many Nobel Prize winners are in my
+library?”*, and it answers from my real data.
+
+<p align="center">
+  <img src="docs/img/miribooks-demo-en.gif" width="340" alt="MiriBooks in action">
+</p>
+
+## What it does
+
+### Scan and know, instantly
+
+Point the camera at the barcode on the back of the book. MiriBooks recognizes it and answers right away:
+
+- **“You don't have it”**: the book's details (title, author, year, pages) are already filled in from
+  public book catalogs. Check them and save.
+- **“You already have it: PDF, paper (Living room)”**: it tells you in which formats and where.
+- **“You have another edition”**: the same book with a different ISBN, so you can decide.
+
+<p align="center">
+  <img src="docs/img/en-2-scanner.png" width="230" alt="Scanner">
+  <img src="docs/img/en-3-new-book.png" width="230" alt="New book, data filled in">
+  <img src="docs/img/en-5-already-have-it.png" width="230" alt="You already have it">
+</p>
+
+### Built for registering hundreds of books
+
+- **Choose the place once** (“Living room bookcase, shelf 2”) and every book goes there.
+- **Continuous scanning:** save, and the camera is already waiting for the next book.
+- It **ignores the price sticker** barcode and won't reopen the book you just saved by accident.
+- **No barcode?** Type the ISBN, or enter title and author for old books.
+
+<p align="center">
+  <img src="docs/img/en-4-saved.png" width="230" alt="Saved, ready for the next one">
+  <img src="docs/img/en-11-place.png" width="230" alt="Choose the place">
+  <img src="docs/img/en-10-type-isbn.png" width="230" alt="Type the ISBN">
+</p>
+
+### It doesn't blindly trust the internet
+
+Public catalogs make mistakes: sometimes an ISBN points to the wrong book. MiriBooks notices when the title
+you corrected no longer matches the catalog's, warns you in plain language, and keeps your data instead.
+Anything you correct by hand stays corrected forever.
+
+<p align="center">
+  <img src="docs/img/en-9-title-mismatch.png" width="230" alt="Title doesn't match the catalog">
+</p>
+
+### Your whole library, in your pocket
+
+The **Library** holds everything: paper books, PDFs and EPUBs. Search by title, author or ISBN (accents
+don't matter: “garcia marquez” finds García Márquez), fix a book's details, move a copy to another shelf,
+or remove it. Your whole e-book folder is imported in one step, so digital books are there too.
+
+<p align="center">
+  <img src="docs/img/en-6-library.png" width="230" alt="Library">
+  <img src="docs/img/en-7-library-book.png" width="230" alt="Edit a book and its copies">
+  <img src="docs/img/en-8-about.png" width="230" alt="About MiriBooks">
+</p>
+
+### Opens with your fingerprint
+
+No passwords to remember. Only your fingerprint unlocks your inventory, and setting up a new phone is a
+single scan of a QR code.
+
+### English and Spanish, light and dark
+
+The whole app follows your phone's language and theme.
+
+<p align="center">
+  <img src="docs/img/2-escaner.png" width="230" alt="Spanish">
+  <img src="docs/img/en-12-dark-scanner.png" width="230" alt="Dark mode">
+  <img src="docs/img/en-13-dark-card.png" width="230" alt="Dark mode, book card">
+</p>
+
+## What I did
+
+I took MiriBooks from idea to an app I use every day:
+
+- **Product:** defined the problem, and the main use case: check before buying.
+- **Data:** designed the inventory model and the rules that guard the integrity and consistency of every
+  record (see below).
+- **Experience and design:** the scanning flow, the warnings, and a visual identity of its own: the icon,
+  typography and “Garden” color palette.
+- **Development:** a native Android app, a cloud service and the book database, plus the importer for
+  e-books.
+- **Quality:** hundreds of automated tests, including tests that walk through every screen in both
+  languages. The screenshots on this page are generated by those tests.
+
+**Built with:** Java (Android) · Python · Google Cloud (Cloud Run, BigQuery) · ML Kit barcode scanning ·
+fingerprint security (Android Keystore).
+
+Built on Google Cloud, the platform I already use for other projects, with no extra tools or subscriptions:
+the service shuts down on its own when nobody is using it, and it's billed only for actual use. The inventory
+lives in BigQuery because it's meant for analysis: exactly what the agent will do.
+
+## Data first, then agents
+
+**No system, model or strategy works well on data it can't trust.** That's why, before thinking about agents, the
+first goal was a **single, trustworthy source of truth** for my library, with **integrity and consistency** guarded at every
+step:
+
+- **One inventory, one place.** Paper books, PDFs and EPUBs live in a single cloud database, modeled like a
+  retail inventory: each *book* appears once, and each physical or digital *copy* records its format and
+  where it is.
+- **Validated at the door.** A barcode is accepted only if it is a real ISBN with a correct check digit;
+  price and store barcodes are rejected.
+- **Clear rules about which source wins.** The book itself first, then public catalogs, then the file name;
+  anything guessed is flagged for review.
+- **Catalogs are checked, not trusted.** When a catalog links an ISBN to the wrong book, MiriBooks detects
+  it and keeps the correct data.
+- **No duplicates, no confusion.** Different editions stay separate; the same book is never registered
+  twice by accident.
+- **Human corrections are final.** Anything I fix by hand is never overwritten by later automatic imports.
+- **Safe updates.** A bulk import never overwrites books saved from the phone while it was running, and
+  dated backups can be taken at any time.
+- **Proven by tests.** Every one of these rules is covered by automated tests.
+
+With that foundation in place, the agents can answer from my real data instead of guessing. Building them
+well is the next challenge.
+
+## Coming next: MiriBooks-Agent
+
+> ***“Talk to your library.”***
+
+Picture this: I'm far from home and someone asks me, *“Which Dickens books do you have?”* Instead of opening
+a database or writing a query, I open MiriBooks, ask, and a few seconds later it answers: how many, which
+ones, on paper or digital, and on which shelf.
+
+MiriBooks-Agent is an AI agent on top of the inventory, so I can simply ask:
+
+- *“How many books do I have?”*
+- *“Do I already have this book?”*
+- *“What did I bring back from my last trip?”*
+- *“Which of my books explain RAG?”*
+- *“List all my Miguel Delibes books.”*
+- *“What percentage of my books are in English and in Spanish, on paper and digital?”*
+- *“I feel like reading Ana María Matute: what do I have by her, and what would you recommend?”*
+- *“My book club is reading Unamuno next week: what do I have by him?”*
+- *“How many Nobel Prize winners are in my library? And how many Cervantes Prize winners?”*
+
+And the same with any author: Jane Austen, the Brontë sisters, Thomas Hardy, Virginia Woolf, Hemingway,
+Toni Morrison, Kazuo Ishiguro, Zadie Smith, Rómulo Gallegos, Miguel Ángel Asturias, Rosario Castellanos,
+Elena Garro, Octavio Paz, Carlos Fuentes, Vargas Llosa…
+
+## About this repository
+
+This is the **showcase** of MiriBooks. The full source code is private; the
+[`fragmentos/`](fragmentos/) folder holds a few selected pieces to show how it's written.
+
+- [User guide](docs/user-guide.md) · [Guía de uso](docs/guia-de-uso.md)
+- The project also has a detailed **technical manual** (architecture, data model, security,
+  deployment and testing), kept private with the code. Happy to walk through it in a conversation.
+
+## Author
+
+**Miriam González Jaimes**: idea, design, development and testing. November 2026.
+
+I come from risk management, where I worked on both sides: the models and strategies, and the data that
+makes them reliable (securing the source, transforming, validating and reconciling it). That's the way of
+working I brought to MiriBooks.
+
+<sub>© 2026 Miriam González Jaimes. All rights reserved: see [LICENSE](LICENSE). Fraunces typeface by Undercase
+Type (SIL Open Font License). Barcode reading by Google ML Kit. Book data from Open Library and Google Books.</sub>
